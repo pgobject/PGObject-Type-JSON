@@ -57,11 +57,42 @@ sub new {
 
 =head2 from_db
 
+serializes from the db. Note that database nulls are preserved distinct from
+json null's.
+
+=cut
+
+sub from_db {
+    my ($class, $var) = @_;
+    return $class->new($var) unless ref $var;
+    return $class->new(JSON->new->allow_nonref->decode($self));
+}
 
 
 =head2 to_db
 
+returns undef if is_null.  Otherwise returns the value encoded as JSON
+
+=cut
+
+sub to_db {
+    my $self = shift @_;
+    return undef if $self->is_null;
+    return JSON->new->allow_nonref->encode($self);
+}
+
 =head2 is_null
+
+Returns true if is a reference to undef.
+
+=cut
+
+sub is_null {
+    my $self = shift @_;
+    my $test = '';
+    return 1 if ref $self eq ref \$test and !defined $$self;
+    return 0;
+}
 
 =head1 AUTHOR
 
