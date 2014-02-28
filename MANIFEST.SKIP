@@ -3,6 +3,7 @@
 # Avoid version control files.
 \B\.svn\b
 \B\.git\b
+\B\.hg\b
 \B\.gitignore\b
 
 # Avoid Makemaker generated and utility files.
