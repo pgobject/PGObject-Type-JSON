@@ -1,16 +1,11 @@
 PGObject-Type-JSON
 
-The README is used to introduce the module and provide instructions on
-how to install the module, any machine dependencies it may have (for
-example C compilers and installed libraries) and any other information
-that should be provided before the module is installed.
+This module is a type handler for JSON entities.  This is a best effort mapping
+of types to references.  Literal values are handled as literal references.
 
-A README file is required for CPAN modules since CPAN extracts the README
-file from a module distribution so that people browsing the archive
-can use it to get an idea of the module's uses. It is usually a good idea
-to provide version information here so that people can decide whether
-fixes for the module are worth downloading.
-
+The current limitation is that there is no ability to distinguish between a 
+database NULL and a json value of null which can be distinct in PostgreSQL.  
+Such support is planned for 1.0.
 
 INSTALLATION
 

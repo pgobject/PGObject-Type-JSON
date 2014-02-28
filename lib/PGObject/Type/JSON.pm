@@ -1,10 +1,12 @@
 package PGObject::Type::JSON;
 
-use 5.006;
+use v5.10;
 use strict;
 use warnings;
 use PGObject;
 use JSON;
+use Carp 'croak';
+
 
 =head1 NAME
 
@@ -12,11 +14,11 @@ PGObject::Type::JSON - JSON wrappers for PGObject
 
 =head1 VERSION
 
-Version 0.01
+Version 1.00
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '1.00';
 
 
 =head1 SYNOPSIS
@@ -39,9 +41,29 @@ safe to use with other database encodings.
 
 =head1 SUBROUTINES/METHODS
 
-=head2 register()
+=head2 register(registry => 'default', types => ['json'])
+
 
 =cut
+
+sub register{
+    my $self = shift @_;
+    croak "Can't pass reference to register \n".
+          "Hint: use the class instead of the object" if ref $self;
+    my %args = @_;
+    my $registry = $args{registry};
+    $registry ||= 'default';
+    my $types = $args{types};
+    $types = ['json'] unless defined $types and @$types;
+    for my $type (@$types){
+        my $ret = 
+            PGObject->register_type(registry => $registry, pg_type => $type,
+                                  perl_class => $self);
+        return $ret unless $ret;
+    }
+    return 1;
+}
+
 
 =head2 new($ref)
 
@@ -50,8 +72,11 @@ Stores this for JSON.
 =cut
 
 sub new {
-    my ($class, $ref);
-    $ref = \$ref unless ref $ref;
+    my ($class, $ref) = @_;
+    if (!ref $ref) {
+        my $src = $ref;
+        $ref = \$src;
+    }
     bless $ref, $class;
 } 
 
@@ -64,8 +89,9 @@ json null's.
 
 sub from_db {
     my ($class, $var) = @_;
-    return $class->new($var) unless ref $var;
-    return $class->new(JSON->new->allow_nonref->decode($self));
+    $var = \$var unless defined $var;
+    return "$class"->new($var) if ref $var;
+    return "$class"->new(JSON->new->allow_nonref->decode($var));
 }
 
 
@@ -78,7 +104,29 @@ returns undef if is_null.  Otherwise returns the value encoded as JSON
 sub to_db {
     my $self = shift @_;
     return undef if $self->is_null;
-    return JSON->new->allow_nonref->encode($self);
+    my $copy;
+    for ($self->reftype){
+       when ('SCALAR') { $copy = $$self; }
+       when ('ARRAY')  { $copy = []; push @$copy, $_ for @$self; }
+       when ('HASH')  { $copy = {}; 
+                        $copy->{$_} = $self->{$_} , $_ for keys %$self; }
+    }
+    return JSON->new->allow_nonref->convert_blessed->encode($copy);
+}
+
+=head2 reftype
+
+Returns the reftype of the object (i.e. HASH, SCALAR, ARRAY)
+
+=cut
+
+sub reftype {
+    my ($self) = @_;
+    my $reftype = "$self";
+    my $pkg = __PACKAGE__;
+    $reftype =~ s/${pkg}=(\w+)\(.*\)/$1/;
+    $reftype = 'SCALAR' if $reftype eq 'REF';
+    return $reftype;
 }
 
 =head2 is_null
@@ -89,8 +137,8 @@ Returns true if is a reference to undef.
 
 sub is_null {
     my $self = shift @_;
-    my $test = '';
-    return 1 if ref $self eq ref \$test and !defined $$self;
+    return 0 if $self->reftype ne 'SCALAR';
+    return 1 if $self eq $$self;
     return 0;
 }
 
