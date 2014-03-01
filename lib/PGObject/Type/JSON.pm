@@ -14,11 +14,11 @@ PGObject::Type::JSON - JSON wrappers for PGObject
 
 =head1 VERSION
 
-Version 1.00
+Version 1.010.01
 
 =cut
 
-our $VERSION = '1.00';
+our $VERSION = '1.010.01';
 
 
 =head1 SYNOPSIS
@@ -109,7 +109,7 @@ sub to_db {
        when ('SCALAR') { $copy = $$self; }
        when ('ARRAY')  { $copy = []; push @$copy, $_ for @$self; }
        when ('HASH')  { $copy = {}; 
-                        $copy->{$_} = $self->{$_} , $_ for keys %$self; }
+                        $copy->{$_} = $self->{$_} for keys %$self; }
     }
     return JSON->new->allow_nonref->convert_blessed->encode($copy);
 }

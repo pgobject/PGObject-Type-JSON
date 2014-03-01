@@ -1,4 +1,4 @@
-use 5.006;
+use 5.010;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
@@ -13,7 +13,12 @@ WriteMakefile(
       : ()),
     PL_FILES            => {},
     PREREQ_PM => {
+        'PGObject'   => 0,
+        'JSON'       => 0,
+    },
+    BUILD_REQUIRES => {
         'Test::More' => 0,
+        'Carp::Always' => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'PGObject-Type-JSON-*' },
