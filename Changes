@@ -1,5 +1,8 @@
 Revision history for PGObject-Type-JSON
 
+1.010.01 2014-03-01
+	Minir packaging changes, version number fix for CPAn
+
 1.01	2014-02-28
 	Minor packaging fixes
 
