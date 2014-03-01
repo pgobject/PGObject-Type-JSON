@@ -1,6 +1,6 @@
 package PGObject::Type::JSON;
 
-use v5.10;
+use 5.006;
 use strict;
 use warnings;
 use PGObject;
@@ -14,11 +14,11 @@ PGObject::Type::JSON - JSON wrappers for PGObject
 
 =head1 VERSION
 
-Version 1.010.01
+Version 1.010_91.  First beta for 1.11.00
 
 =cut
 
-our $VERSION = '1.010.01';
+our $VERSION = '1.010_91';
 
 
 =head1 SYNOPSIS
@@ -67,7 +67,9 @@ sub register{
 
 =head2 new($ref)
 
-Stores this for JSON.
+Stores this as a reference.  Currently database nulls are stored as cyclical 
+references which is probably a bad idea.  In the future we should probably 
+have a lexically scoped table for this.
 
 =cut
 
@@ -106,10 +108,10 @@ sub to_db {
     return undef if $self->is_null;
     my $copy;
     for ($self->reftype){
-       when ('SCALAR') { $copy = $$self; }
-       when ('ARRAY')  { $copy = []; push @$copy, $_ for @$self; }
-       when ('HASH')  { $copy = {}; 
-                        $copy->{$_} = $self->{$_} for keys %$self; }
+       if    ($_ eq 'SCALAR') { $copy = $$self if $_ eq 'SCALAR' }
+       elsif ($_ eq 'ARRAY')  { $copy = []; push @$copy, $_ for @$self; }
+       elsif ($_ eq 'HASH')  { $copy = {}; 
+                                $copy->{$_} = $self->{$_} for keys %$self; }
     }
     return JSON->new->allow_nonref->convert_blessed->encode($copy);
 }
@@ -131,14 +133,15 @@ sub reftype {
 
 =head2 is_null
 
-Returns true if is a reference to undef.
+Returns true if is a database null.
 
 =cut
 
 sub is_null {
     my $self = shift @_;
     return 0 if $self->reftype ne 'SCALAR';
-    return 1 if $self eq $$self;
+    return 0 if !defined $$self;
+    return 1 if ref $self && ($self eq $$self);
     return 0;
 }
 
