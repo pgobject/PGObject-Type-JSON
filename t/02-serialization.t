@@ -9,6 +9,7 @@ use warnings;
 my $nulltest = 'null';
 my $undeftest = undef;
 my $hashtest = '{"foo": 1, "bar": 2}';
+my $hashtest2 = '{"bar": 2, "foo": 1}';
 my $arraytest = '[1,2,3]';
 my $literaltest = '123';
 my ($undef, $null, $hash, $array, $literal);
@@ -31,7 +32,7 @@ ok($undef->is_null, 'undef is undef');
 ok($hash = PGObject::Type::JSON->from_db($hashtest), 'Instantiate hashref');
 ok($hash->isa('PGObject::Type::JSON'), "Hashref is a JSON object");
 is($hash->reftype, 'HASH', 'Hashref is a HASH');
-is($hash->to_db, '{"bar":2,"foo":1}', 'Serialization of hashtest works');
+like($hash->to_db, qr/(\{"bar":2,"foo":1\}|\{"foo":1,"bar":2\})/, 'Serialization of hashtest works');
 is($hash->{foo}, 1, 'Hash foo element is 1');
 is($hash->{bar}, 2, 'Hash bar element is 2');
 

@@ -14,11 +14,11 @@ PGObject::Type::JSON - JSON wrappers for PGObject
 
 =head1 VERSION
 
-Version 1.010_91.  First beta for 1.11.00
+Version 1.010_93.  Beta for 1.11.00
 
 =cut
 
-our $VERSION = '1.010_91';
+our $VERSION = '1.010_93';
 
 
 =head1 SYNOPSIS
