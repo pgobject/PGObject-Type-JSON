@@ -1,7 +1,16 @@
 Revision history for PGObject-Type-JSON
 
+2.0.0	2017-05-15
+	Perl 5.8 support removed
+	PGObject 2.x supported
+	Support for JSONB added.
+
+1.011.0 2014-03-02
+	Perl 5.8 support added
+	Fixed test cases base on json hash key ordering 
+
 1.010.01 2014-03-01
-	Minir packaging changes, version number fix for CPAn
+	Minor packaging changes, version number fix for CPAn
 
 1.01	2014-02-28
 	Minor packaging fixes
