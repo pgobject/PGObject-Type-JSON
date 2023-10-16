@@ -14,11 +14,11 @@ PGObject::Type::JSON - JSON wrappers for PGObject
 
 =head1 VERSION
 
-Version 2.0.1
+Version 2.0.2
 
 =cut
 
-our $VERSION = 2.000001;
+our $VERSION = 2.000002;
 
 
 =head1 SYNOPSIS
@@ -95,11 +95,24 @@ json null's.
 
 =cut
 
+my %special_vars = (
+   db_null => 1,
+);
+
+sub null { \$special_vars{db_null} }
+
 sub from_db {
     my ($class, $var) = @_;
-    $var = \$var unless defined $var;
-    return "$class"->new($var) if ref $var;
-    return "$class"->new(JSON->new->allow_nonref->decode($var));
+    $var = null unless defined $var;
+    return $var if $var =~ /^\d$/; # we return scalars directly and this int
+    if (defined $var and $var =~ /^"/) { # is a string literal only
+        $var =~ s/(^"|"$)//g; #remove surrounding quotes
+        return $var;
+    }
+    
+    return __PACKAGE__->new($var) if ref $var;
+    my $obj = __PACKAGE__->new(JSON->new->allow_nonref->decode($var));
+    return $obj->reftype eq 'SCALAR' ? $$obj : $obj ;
 }
 
 
@@ -109,17 +122,31 @@ returns undef if is_null.  Otherwise returns the value encoded as JSON
 
 =cut
 
+=head2 null
+
+Return a null type for storage in the db.
+
+=cut
+
+=head2 TO_JSON
+
+The handler for setting this to the JSON parser
+
+=cut
+
+sub TO_JSON {
+    my $self = shift;
+    for ($self->reftype){
+        if ($_ eq 'SCALAR') { return $$self; }
+        if ($_ eq 'ARRAY')  { return [@$self]; }
+        if ($_ eq 'HASH')   { return { %$self } }
+    }
+}
+
 sub to_db {
     my $self = shift @_;
     return undef if $self->is_null;
-    my $copy;
-    for ($self->reftype){
-       if    ($_ eq 'SCALAR') { $copy = $$self if $_ eq 'SCALAR' }
-       elsif ($_ eq 'ARRAY')  { $copy = []; push @$copy, $_ for @$self; }
-       elsif ($_ eq 'HASH')  { $copy = {}; 
-                                $copy->{$_} = $self->{$_} for keys %$self; }
-    }
-    return JSON->new->allow_nonref->convert_blessed->encode($copy);
+    return JSON->new->allow_blessed->convert_blessed->encode($self);
 }
 
 =head2 reftype
@@ -145,9 +172,7 @@ Returns true if is a database null.
 
 sub is_null {
     my $self = shift @_;
-    return 0 if $self->reftype ne 'SCALAR';
-    return 0 if !defined $$self;
-    return 1 if ref $self && ($self eq $$self);
+    return 1 if ref $self && ($self eq null);
     return 0;
 }
 
