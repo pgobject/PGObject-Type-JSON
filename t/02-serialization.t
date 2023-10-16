@@ -13,7 +13,7 @@ my $undeftest = undef;
 my $hashtest = '{"foo": 1, "bar": 2}';
 my $hashtest2 = '{"bar": 2, "foo": 1}';
 my $arraytest = '[1,2,3]';
-my $literaltest = 'a123abc';
+my $literaltest = 'a123abc"\u0000"';
 my $inttest = 123;
 my ($undef, $null, $hash, $array, $literal, $int);
 
@@ -50,6 +50,5 @@ is(PGObject::Type::JSON->from_db($inttest), $inttest,
      'Instantiate literal int');
 is(PGObject::Type::JSON->new($inttest)->to_db, $inttest, 'Literal serializes correctly');
 #literal ref, should be a scalar ref, serializing as it is
-is(PGObject::Type::JSON->from_db(qq("$literaltest")), $literaltest, 
-     'Instantiate literal string');
-is(PGObject::Type::JSON->new($literaltest)->to_db, qq("$literaltest"), 'Literal serializes correctly');
+is(PGObject::Type::JSON->new($literaltest)->to_db, '"a123abc\"\\\\u0000\""', 'Serialization test');
+ok($literal = PGObject::Type::JSON->from_db(PGObject::Type::JSON->new($literaltest)->to_db), $literaltest, 'basic round trip for complex literal');

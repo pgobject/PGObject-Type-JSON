@@ -14,11 +14,11 @@ PGObject::Type::JSON - JSON wrappers for PGObject
 
 =head1 VERSION
 
-Version 2.0.2
+Version 2.0.3
 
 =cut
 
-our $VERSION = 2.000002;
+our $VERSION = 2.000003;
 
 
 =head1 SYNOPSIS
@@ -104,12 +104,6 @@ sub null { \$special_vars{db_null} }
 sub from_db {
     my ($class, $var) = @_;
     $var = null unless defined $var;
-    return $var if $var =~ /^\d$/; # we return scalars directly and this int
-    if (defined $var and $var =~ /^"/) { # is a string literal only
-        $var =~ s/(^"|"$)//g; #remove surrounding quotes
-        return $var;
-    }
-    
     return __PACKAGE__->new($var) if ref $var;
     my $obj = __PACKAGE__->new(JSON->new->allow_nonref->decode($var));
     return $obj->reftype eq 'SCALAR' ? $$obj : $obj ;
