@@ -3,7 +3,7 @@ use PGObject::Type::JSON;
 
 use Carp::Always;
 
-plan 24;
+plan 25;
 
 use strict;
 use warnings;
@@ -16,6 +16,9 @@ my $arraytest = '[1,2,3]';
 my $literaltest = 'a123abc"\u0000"';
 my $inttest = 123;
 my ($undef, $null, $hash, $array, $literal, $int);
+
+# not allowing coderefs
+ok(dies { PGObject::Type::JSON->new( sub { 1 } ) }, 'dies on coderef');
 
 # string 'null', should serialize as 'null', not the same as db null
 ok($null = PGObject::Type::JSON->new(PGObject::Type::JSON->from_db($nulltest)), 'Instantiate null');
@@ -48,7 +51,7 @@ is($array->to_db, $arraytest, 'Array serializes to db correctly');
 #int ref, should be a scalar ref, serializing as it is
 is(PGObject::Type::JSON->from_db($inttest), $inttest,
      'Instantiate literal int');
-is(PGObject::Type::JSON->new($inttest)->to_db, $inttest, 'Literal serializes correctly');
+is(PGObject::Type::JSON->new($inttest)->to_db, qq($inttest), 'Literal serializes correctly');
 #literal ref, should be a scalar ref, serializing as it is
 is(PGObject::Type::JSON->new($literaltest)->to_db, '"a123abc\"\\\\u0000\""', 'Serialization test');
 ok($literal = PGObject::Type::JSON->from_db(PGObject::Type::JSON->new($literaltest)->to_db), $literaltest, 'basic round trip for complex literal');
