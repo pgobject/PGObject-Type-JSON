@@ -14,11 +14,11 @@ PGObject::Type::JSON - JSON wrappers for PGObject
 
 =head1 VERSION
 
-Version 2.0.4
+Version 2.1.0
 
 =cut
 
-our $VERSION = 2.0.4;
+our $VERSION = '2.1.0';
 
 
 =head1 SYNOPSIS
