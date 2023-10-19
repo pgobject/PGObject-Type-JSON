@@ -1,5 +1,8 @@
 Revision history for PGObject-Type-JSON
 
+2.1.1   2023-10-11
+        Subclassing now supported and tested
+
 2.1.0   2023-10-18
         Fixes for db vs json nulls
         We now throw an error if unserializable reference types are passed into

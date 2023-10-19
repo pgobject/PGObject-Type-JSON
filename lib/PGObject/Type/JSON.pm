@@ -6,6 +6,7 @@ use warnings;
 use PGObject;
 use JSON;
 use Carp 'croak';
+use Scalar::Util 'blessed';
 
 
 =head1 NAME
@@ -14,11 +15,11 @@ PGObject::Type::JSON - JSON wrappers for PGObject
 
 =head1 VERSION
 
-Version 2.1.0
+Version 2.1.1
 
 =cut
 
-our $VERSION = '2.1.0';
+our $VERSION = '2.1.1';
 
 
 =head1 SYNOPSIS
@@ -88,7 +89,7 @@ sub new {
         my $src = $ref;
 	$ref = \$src;
     }
-    bless $ref, __PACKAGE__;
+    bless $ref, $class;
     croak 'unsupported reftype' unless $ref->reftype =~ /^(SCALAR|ARRAY|HASH)$/;
     return $ref;
 } 
@@ -111,8 +112,8 @@ sub is_json_null { json_null eq shift };
 sub from_db {
     my ($class, $var) = @_; 
     return $class->new(undef) unless defined $var;
-    return __PACKAGE__->new(json_null) if $var eq 'null';
-    my $obj = __PACKAGE__->new(JSON->new->allow_nonref->decode($var));
+    return $class->new(json_null) if $var eq 'null';
+    my $obj = $class->new(JSON->new->allow_nonref->decode($var));
     return $obj->reftype eq 'SCALAR' ? $$obj : $obj ;
 }
 
@@ -160,7 +161,7 @@ Returns the reftype of the object (i.e. HASH, SCALAR, ARRAY)
 sub reftype {
     my ($self) = @_;
     my $reftype = "$self";
-    my $pkg = __PACKAGE__;
+    my $pkg = blessed $self;
     $reftype =~ s/${pkg}=(\w+)\(.*\)/$1/;
     $reftype = 'SCALAR' if $reftype eq 'REF';
     return $reftype;
@@ -234,7 +235,7 @@ L<http://search.cpan.org/dist/PGObject-Type-JSON/>
 
 =head1 LICENSE AND COPYRIGHT
 
-Copyright 2013 Chris Travers.
+Copyright 2013-2023 Chris Travers.
 
 This program is released under the following license: BSD
 
